@@ -3,10 +3,116 @@
 <head>
   <meta charset="utf-8">
   <title>URDB!</title>
-</head>
-<body>
-  <div class="main">hello world</div>
   <script src="js/jquery-1.11.1.min.js"></script>
   <script src="js/handlebars-v1.3.0.js"></script>
+</head>
+
+<body>
+  <div class="main">
+    <h1>Search for a Movie</h1>
+      <div>
+        <input type="text" class="searchTerm">
+        <button class="search">Search for Movie!</button>
+      </div>
+    <br/>
+    <button class="favoriteMovies">View Favorite Movies</button>
+
+    <h1>Now Playing</h1>
+  </div>
+
+  <script id="movieList" type="text/x-handlebars-template">
+    <div class="nowPlayingMovie">
+      <h4 class="movie-title"> {{ title }}</h4>
+      <p>Vote Average: {{ vote_average }}, Votes: {{votes_count}} </p>
+      <p>Popularity: {{ popularity }} </p>
+      <p>Release Date: {{ release_date }} </p>
+    </div>
+  </script>
+
+
+
+  <script id="fullMovieView" type="text/x-handlebars-template">
+    <h2> {{ title }}</h2>
+    <image src="http://image.tmdb.org/t/p/w300{{ poster_path }}" ></image>
+    <p> {{ tagline }} </p>
+    <p>Vote Average: {{ vote_average }}, Votes: {{vote_count}} </p>
+    <p>Overview: {{ overview }}</p>
+    <p>Release date: {{ release_date }}</p>
+    <button class="favMovie">Add Movie to Favorites</button>
+    <a href="http://www.imdb.com/title/{{ imdb_id }}">{{ title }} IMDb Link </a>
+    <p>Movie Details</p>
+      <ul>
+        <li>Runtime: {{runtime}} </li>
+        <li>Box Office: {{ revenue }} </li>
+        <li>Genre(s): {{#each genres}} {{name}}, {{/each}}</li> 
+      </ul>
+  </script>
+
+<!--   $.get('https://api.themoviedb.org/3/movie/91314?api_key=0af4861d6201621e1df280a13e611346', function(data) {console.log(data);}) -->
+
+  <script>
+
+    function movieLister (selector, pageTitle) {
+      return function(movieList) {
+        $('.main').html(pageTitle);
+
+        var source = $(selector).html(),
+            template = Handlebars.compile(source);
+
+        for(var i = 0; i<movieList.results.length; i++) {
+          html = $(template(movieList.results[i]));
+          html.click({id: movieList.results[i].id}, showMovie);
+          $('.main').append(html);
+        }
+      };
+    }
+
+    function showMovie(event) {
+      var movieID = event.data.id;
+      $('.main').html("");
+      var movieData = $.get('https://api.themoviedb.org/3/movie/'+ movieID + '?api_key=0af4861d6201621e1df280a13e611346', function(movieData) {
+          var source = $('#fullMovieView').html(),
+              template = Handlebars.compile(source),
+              html = template(movieData);
+
+          $('.main').html(html);
+        });
+    }
+
+    $.get('https://api.themoviedb.org/3/movie/now_playing?api_key=0af4861d6201621e1df280a13e611346', movieLister('#movieList'));
+
+    $('.search').click(function(e) {
+      var searchTerm = $('.searchTerm').val();
+      $.ajax({
+        type: "GET",
+        data: {
+          api_key: "0af4861d6201621e1df280a13e611346",
+          query: searchTerm,
+          include_adult: true
+        },
+        url: "https://api.themoviedb.org/3/search/movie",
+        success: movieLister('#movieList', "<h1> Search Results </h1>")
+      });
+    });
+
+    // $('.favoriteMovies').click(function (e) {
+    //    $.ajax({
+    //       type: "GET",
+    //       data: {
+    //         api_key: "0af4861d6201621e1df280a13e611346",
+    //         // session_id: 
+    //       },
+    //       url: "https://api.themoviedb.org/3/account/favorite/movies",
+    //       success: movieLister('#movieList')
+    //     });
+    //  });
+
+    // $('.favMovie').click(  , function(e) {
+    //   $.ajax({
+
+    //   }); 
+    // });
+
+  </script>
 </body>
 </html>
